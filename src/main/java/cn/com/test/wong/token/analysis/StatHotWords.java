@@ -2,6 +2,7 @@ package cn.com.test.wong.token.analysis;
 
 import org.apdplat.word.recognition.Punctuation;
 import org.apdplat.word.recognition.RecognitionTool;
+import org.apdplat.word.recognition.StopWord;
 import org.apdplat.word.segmentation.Word;
 import org.apdplat.word.segmentation.impl.AbstractSegmentation;
 
@@ -14,6 +15,37 @@ import java.util.List;
  * Description:
  */
 public class StatHotWords extends AbstractSegmentation {
+
+    public List<String> getHotWords(String text, int queueSize) {
+        List<String> newWords = new ArrayList<String>();
+        List<Word> result = segImpl(text, queueSize);
+        int posStart = 0;
+        int posEnd = posStart;
+
+        while (posEnd < result.size()) {
+            while (posEnd < result.size() && posEnd - posStart < queueSize) {
+                String word = result.get(posEnd).toString();
+                if (StopWord.is(word)) {
+                    posStart = posEnd + 1;
+                    posEnd = posStart;
+                } else {
+                    posEnd++;
+                }
+            }
+            if (posEnd - posStart == queueSize) {
+                List<Word> subList = result.subList(posStart, posEnd);
+                String newWord = "";
+                for (Word word : subList) {
+                    newWord += word.toString();
+                }
+                newWords.add(newWord);
+            }
+
+            posStart++;
+        }
+
+        return newWords;
+    }
     @Override
     public List<Word> segImpl(String text) {
         return segImpl(text, 1);
@@ -30,6 +62,7 @@ public class StatHotWords extends AbstractSegmentation {
     }
 
     private List<Word> getWordsFromSingleSentence(String text, final int queueSize) {
+
         List<Word> result = new ArrayList<Word>();
         //文本长度
         final int textLen = text.length();
@@ -60,6 +93,8 @@ public class StatHotWords extends AbstractSegmentation {
             //每一次成功切词后都要重置截取长度
             len = getInterceptLength();
         }
+
+
         return result;
     }
 
