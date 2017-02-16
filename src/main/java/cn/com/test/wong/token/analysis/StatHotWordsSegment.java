@@ -14,11 +14,22 @@ import java.util.List;
  * Version:
  * Description:
  */
-public class StatHotWords extends AbstractSegmentation {
-
+public class StatHotWordsSegment extends AbstractSegmentation {
     public List<String> getHotWords(String text, int queueSize) {
         List<String> newWords = new ArrayList<String>();
-        List<Word> result = segImpl(text, queueSize);
+        List<String> sentences = Punctuation.seg(text, KEEP_PUNCTUATION);
+        for (String sentence : sentences) {
+            System.out.println("sentence:" + sentence);
+            newWords.addAll(extractHotWord(sentence, queueSize));
+        }
+
+        return newWords;
+    }
+
+
+    private List<String> extractHotWord(String sentence, int queueSize) {
+        List<String> newWords = new ArrayList<String>();
+        List<Word> result = getWordsFromSingleSentence(sentence);
         int posStart = 0;
         int posEnd = posStart;
 
@@ -38,7 +49,10 @@ public class StatHotWords extends AbstractSegmentation {
                 for (Word word : subList) {
                     newWord += word.toString();
                 }
-                newWords.add(newWord);
+
+                if (newWord.length() != 1) {
+                    newWords.add(newWord);
+                }
             }
 
             posStart++;
@@ -46,22 +60,20 @@ public class StatHotWords extends AbstractSegmentation {
 
         return newWords;
     }
+
     @Override
     public List<Word> segImpl(String text) {
-        return segImpl(text, 1);
-    }
-
-    public List<Word> segImpl(String text, int wordLength) {
         List<Word> result = new ArrayList<Word>();
         List<String> sentences = Punctuation.seg(text, KEEP_PUNCTUATION);
+        System.out.println(sentences.size());
         for (String sentence : sentences) {
-            result.addAll(getWordsFromSingleSentence(sentence, wordLength));
+            result.addAll(getWordsFromSingleSentence(sentence));
         }
 
         return result;
     }
 
-    private List<Word> getWordsFromSingleSentence(String text, final int queueSize) {
+    private List<Word> getWordsFromSingleSentence(String text) {
 
         List<Word> result = new ArrayList<Word>();
         //文本长度
